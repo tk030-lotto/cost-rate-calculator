@@ -66,7 +66,9 @@
         let targetSellingPrice = null;
         const validTargetRate = typeof targetCostRate === 'number' && !isNaN(targetCostRate) && targetCostRate > 0 && targetCostRate <= 100 ? targetCostRate : null;
 
-        if (validTargetRate !== null && totalCost > 0) {
+        // 逆算価格は「販売価格 > 0」かつ「原価 > 0」の条件下でのみ計算
+        // 仕様書 13節: 「0以下の販売価格は無効」とする方針に整合
+        if (validTargetRate !== null && totalCost > 0 && validSellingPrice > 0) {
             const rawTargetPrice = totalCost / (validTargetRate / 100);
             targetSellingPrice = applyRounding(rawTargetPrice, roundingMode);
         }
