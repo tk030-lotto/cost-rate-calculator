@@ -1,5 +1,10 @@
 # プロジェクト活動記録: 原価率らくらく計算 (cost-rate-calculator)
 
+## 2026-09-18 note記事テキストへのリンク・リポジトリ・ハッシュタグ追記
+- `原価率の計算、もっと簡単に。.txt` の見出し直下に GitHub Pages 公開URL を追加
+- 記事末尾に WebツールURL、GitHubリポジトリURL、およびハッシュタグ（#原価率 #原価計算 #粗利率 #個人開発 #Webツール #価格設定 #飲食）を追加
+- Gitコミット & GitHubリモートプッシュ完了
+
 ## 2026-09-18 リポジトリのパブリック化 & GitHub Pages デプロイ完了
 - リポジトリの可視性を `private` から `public` に変更
 - リポジトリの About 欄を設定（Description, Website, Topics）

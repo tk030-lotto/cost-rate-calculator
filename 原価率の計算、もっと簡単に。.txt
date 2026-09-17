@@ -4,6 +4,9 @@
 
 ## ――「原価率らくらく計算」を作りました
 
+▼ 原価率らくらく計算（ブラウザで今すぐ使えます・登録不要）
+https://tk030-lotto.github.io/cost-rate-calculator/
+
 商品やメニューの価格を決めるとき、
 
 「原価率って何％だっけ？」
@@ -425,3 +428,13 @@ UI/UX。
 商品やメニューの原価を確認したいときに、気軽に使ってみてください。
 
 **原価率らくらく計算 ―― 原価から、価格を考える。**
+
+---
+
+■ 原価率らくらく計算（Webツール）
+https://tk030-lotto.github.io/cost-rate-calculator/
+
+■ GitHubリポジトリ（ソースコード）
+https://github.com/tk030-lotto/cost-rate-calculator
+
+#原価率 #原価計算 #粗利率 #個人開発 #Webツール #価格設定 #飲食
