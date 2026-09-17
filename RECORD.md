@@ -1,5 +1,13 @@
 # プロジェクト活動記録: 原価率らくらく計算 (cost-rate-calculator)
 
+## 2026-09-18 リポジトリのパブリック化 & GitHub Pages デプロイ完了
+- リポジトリの可視性を `private` から `public` に変更
+- リポジトリの About 欄を設定（Description, Website, Topics）
+- GitHub Pages を有効化し、`main` ブランチの `/` から配信開始
+  - 公開URL: https://tk030-lotto.github.io/cost-rate-calculator/
+- `README.md` に公開URLを反映
+- Gitコミット & GitHubリモートプッシュ完了
+
 ## 2026-08-30 紹介・解説記事テキストの追加
 - `原価率の計算、もっと簡単に。.txt`（ツールの企画意図・利用メリット・note/X向け解説テキスト）を追加
 - Gitコミット & GitHubリモートプッシュ完了

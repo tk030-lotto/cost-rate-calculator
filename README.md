@@ -2,6 +2,8 @@
 
 商品・メニューの販売価格と原価から、原価率・粗利・粗利率をすぐに確認できる無料・登録不要のWebツールです。
 
+**🔗 公開URL（ブラウザですぐに利用可能）**: [https://tk030-lotto.github.io/cost-rate-calculator/](https://tk030-lotto.github.io/cost-rate-calculator/)
+
 原価を入力して計算するだけでなく、**目標原価率から必要な販売価格を逆算**できることを中心機能とします。
 
 ![原価率らくらく計算 デモアニメーション](demo.gif)
