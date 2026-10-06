@@ -1,7 +1,8 @@
-﻿/**
+/**
  * @file test_edge_cases.js
- * @description 繧ｨ繝・ず繧ｱ繝ｼ繧ｹ繝ｻ蠅・阜蛟､繝ｻ逡ｰ蟶ｸ邉ｻ縺ｮ閾ｪ蜍墓､懆ｨｼ繧ｹ繧ｯ繝ｪ繝励ヨ
- * 2026/08/30: 繧ｳ繝ｼ繝峨Ξ繝薙Η繝ｼ邨先棡縺ｫ蝓ｺ縺･縺乗隼蝟・ */
+ * @description エッジケース・境界値・異常系の自動検証スクリプト
+ * 2026/08/30: コードレビュー結果に基づく改善
+ */
 
 const units = require('./js/units.js');
 const calc = require('./js/calculator.js');
@@ -12,10 +13,10 @@ let failed = 0;
 
 function assert(condition, message) {
     if (condition) {
-        console.log(`笨・PASS: ${message}`);
+        console.log(`✅ PASS: ${message}`);
         passed++;
     } else {
-        console.error(`笶・FAIL: ${message}`);
+        console.error(`❌ FAIL: ${message}`);
         failed++;
     }
 }
@@ -23,132 +24,137 @@ function assert(condition, message) {
 function assertClose(actual, expected, tolerance = 0.01, message) {
     const diff = Math.abs(actual - expected);
     if (diff <= tolerance) {
-        console.log(`笨・PASS: ${message} (Actual: ${actual}, Expected: ${expected})`);
+        console.log(`✅ PASS: ${message} (Actual: ${actual}, Expected: ${expected})`);
         passed++;
     } else {
-        console.error(`笶・FAIL: ${message} (Actual: ${actual}, Expected: ${expected}, Diff: ${diff})`);
+        console.error(`❌ FAIL: ${message} (Actual: ${actual}, Expected: ${expected}, Diff: ${diff})`);
         failed++;
     }
 }
 
-console.log('=== A. 繧ｼ繝ｭ髯､邂励・蠅・阜蛟､繝・せ繝・===');
+console.log('=== A. ゼロ除算・境界値テスト ===');
 
 const zeroPriceResult = calc.calculateCostSummary({
     materials: [{ id: '1', usageAmount: 100, usageUnit: 'g', purchaseAmount: 1, purchaseUnit: 'kg', purchasePrice: 1000 }],
     sellingPrice: 0,
     targetCostRate: 30
 });
-assert(zeroPriceResult.costRate === 0, '雋ｩ螢ｲ萓｡譬ｼ0蜀・・蜴滉ｾ｡邇・・0');
-assert(zeroPriceResult.grossProfit === 0, '雋ｩ螢ｲ萓｡譬ｼ0蜀・・邊怜茜縺ｯ0');
-assert(zeroPriceResult.targetSellingPrice === null, '雋ｩ螢ｲ萓｡譬ｼ0蜀・・騾・ｮ嶺ｾ｡譬ｼ縺ｯnull');
+assert(zeroPriceResult.costRate === 0, '販売価格0円の原価率は0');
+assert(zeroPriceResult.grossProfit === 0, '販売価格0円の粗利は0');
+assert(zeroPriceResult.targetSellingPrice === null, '販売価格0円の逆算価格はnull');
 
 const zeroCostResult = calc.calculateCostSummary({
     materials: [{ id: '1', usageAmount: 0, usageUnit: 'g', purchaseAmount: 1, purchaseUnit: 'kg', purchasePrice: 1000 }],
     sellingPrice: 1000,
     targetCostRate: 30
 });
-assert(zeroCostResult.costRate === 0, '菴ｿ逕ｨ驥・縺ｮ蜴滉ｾ｡邇・・0');
-assert(zeroCostResult.targetSellingPrice === null, '蜴滉ｾ｡0縺ｮ騾・ｮ嶺ｾ｡譬ｼ縺ｯnull (0髯､邂怜屓驕ｿ)');
+assert(zeroCostResult.costRate === 0, '使用量0の原価率は0');
+assert(zeroCostResult.targetSellingPrice === null, '原価0の逆算価格はnull (0除算回避)');
 
-console.log('\n=== B. 讌ｵ遶ｯ縺ｪ蛟､繝・せ繝・===');
+console.log('\n=== B. 極端な値テスト ===');
 
 const largeValueResult = calc.calculateCostSummary({
     materials: [{ id: '1', usageAmount: 1000, usageUnit: 'kg', purchaseAmount: 1, purchaseUnit: 'kg', purchasePrice: 1000000 }],
     sellingPrice: 1000000000
 });
-assertClose(largeValueResult.totalCost, 1000000000, 1, '螟ｧ隕乗ｨ｡蜴滉ｾ｡險育ｮ・(1000kg * 1,000,000蜀・');
-assertClose(largeValueResult.costRate, 100, 0.01, '螟ｧ隕乗ｨ｡雋ｩ螢ｲ譎ゅ・蜴滉ｾ｡邇・(1000蛟・= 100%)');
+assertClose(largeValueResult.totalCost, 1000000000, 1, '大規模原価計算 (1000kg * 1,000,000円)');
+assertClose(largeValueResult.costRate, 100, 0.01, '大規模販売時の原価率 (1000倍 = 100%)');
 
-console.log('\n=== C. 蟆乗焚蛟､繝・せ繝・===');
+console.log('\n=== C. 小数値テスト ===');
 
 const decimalResult = calc.calculateCostSummary({
     materials: [{ id: '1', usageAmount: 0.5, usageUnit: 'kg', purchaseAmount: 1, purchaseUnit: 'kg', purchasePrice: 1000 }],
     sellingPrice: 1000,
     targetCostRate: 25
 });
-assertClose(decimalResult.totalCost, 500, 0.001, '蟆乗焚菴ｿ逕ｨ驥上・險育ｮ・(0.5kg * 1000蜀・');
-assertClose(decimalResult.costRate, 50, 0.01, '蟆乗焚菴ｿ逕ｨ驥上・蜴滉ｾ｡邇・);
+assertClose(decimalResult.totalCost, 500, 0.001, '小数使用量の計算 (0.5kg * 1000円)');
+assertClose(decimalResult.costRate, 50, 0.01, '小数使用量の原価率');
 
-console.log('\n=== D. NaN/譛ｪ螳夂ｾｩ蛟､繝・せ繝・===');
+console.log('\n=== D. NaN/未定義値テスト ===');
 
 const nanResult = calc.calculateCostSummary({
     materials: [],
     sellingPrice: NaN,
     targetCostRate: undefined
 });
-assert(nanResult.sellingPrice === 0, 'NaN雋ｩ螢ｲ萓｡譬ｼ縺ｯ0縺ｨ縺励※蜃ｦ逅・);
-assert(nanResult.targetCostRate === null, 'undefined逶ｮ讓咏紫縺ｯnull縺ｨ縺励※蜃ｦ逅・);
+assert(nanResult.sellingPrice === 0, 'NaN販売価格は0として処理');
+assert(nanResult.targetCostRate === null, 'undefined目標率はnullとして処理');
 
-console.log('\n=== E. 辟｡蜉ｹ縺ｪ逶ｮ讓吝次萓｡邇・ユ繧ｹ繝・===');
+console.log('\n=== E. 無効な目標原価率テスト ===');
 
 const invalidTargetResult = calc.calculateCostSummary({
     materials: [{ id: '1', usageAmount: 100, usageUnit: 'g', purchaseAmount: 1, purchaseUnit: 'kg', purchasePrice: 1000 }],
     sellingPrice: 1000,
     targetCostRate: 0
 });
-assert(invalidTargetResult.targetCostRate === null, '逶ｮ讓吝次萓｡邇・縺ｯnull縺ｨ縺励※蜃ｦ逅・);
-assert(invalidTargetResult.targetSellingPrice === null, '逶ｮ讓吝次萓｡邇・縺ｮ騾・ｮ嶺ｾ｡譬ｼ縺ｯnull');
+assert(invalidTargetResult.targetCostRate === null, '目標原価率0はnullとして処理');
+assert(invalidTargetResult.targetSellingPrice === null, '目標原価率0の逆算価格はnull');
 
 const over100Result = calc.calculateCostSummary({
     materials: [{ id: '1', usageAmount: 100, usageUnit: 'g', purchaseAmount: 1, purchaseUnit: 'kg', purchasePrice: 1000 }],
     sellingPrice: 1000,
     targetCostRate: 150
 });
-assert(over100Result.targetCostRate === null, '逶ｮ讓吝次萓｡邇・50%縺ｯnull縺ｨ縺励※蜃ｦ逅・(100%雜・');
+assert(over100Result.targetCostRate === null, '目標原価率150%はnullとして処理 (100%超)');
 
-console.log('\n=== F. 蜊倅ｽ榊､画鋤隧ｳ邏ｰ繝・せ繝・===');
+console.log('\n=== F. 単位変換詳細テスト ===');
 
-// 7-7. 蜊倅ｽ榊､画鋤隧ｳ邏ｰ繝・せ繝・assert(units.areUnitsCompatible('cc', 'ml') === true, 'cc 縺ｨ ml 縺ｯ莠呈鋤諤ｧ縺ゅｊ (蜷檎ｳｻ邨ｱ)');
-assert(units.areUnitsCompatible('L', 'l') === true, 'L 縺ｨ l 縺ｯ蜷後§螳ｹ驥冗ｳｻ');
-assert(units.convertUnit(1, 'L', 'l') === 1, 'L -> l 螟画鋤 (1:1 蜷悟､)');
-assert(units.convertUnit(500, 'ml', 'L') === 0.5, 'ml -> L 螟画鋤 (0.001蛟・');
-assert(units.convertUnit(100, 'g', 'kg') === 0.1, 'g -> kg 螟画鋤 (0.001蛟・');
-assert(units.convertUnit(5, 'kg', 'g') === 5000, 'kg -> g 螟画鋤 (1000蛟・');
+// 7-7. 単位変換詳細テスト
+assert(units.areUnitsCompatible('cc', 'ml') === true, 'cc と ml は互換性あり (同系統)');
+assert(units.areUnitsCompatible('L', 'l') === true, 'L と l は同じ容量系');
+assert(units.convertUnit(1, 'L', 'l') === 1, 'L -> l 変換 (1:1 同値)');
+assert(units.convertUnit(500, 'ml', 'L') === 0.5, 'ml -> L 変換 (0.001倍)');
+assert(units.convertUnit(100, 'g', 'kg') === 0.1, 'g -> kg 変換 (0.001倍)');
+assert(units.convertUnit(5, 'kg', 'g') === 5000, 'kg -> g 変換 (1000倍)');
 
-// 7-8. 譛ｪ遏･縺ｮ蜊倅ｽ・const unknownUnitResult = units.calculateMaterialCost(100, 'xyz', 1, 'kg', 1000);
-assert(unknownUnitResult.isValid === false, '譛ｪ遏･縺ｮ菴ｿ逕ｨ蜊倅ｽ阪・繧ｨ繝ｩ繝ｼ');
+// 7-8. 未知の単位
+const unknownUnitResult = units.calculateMaterialCost(100, 'xyz', 1, 'kg', 1000);
+assert(unknownUnitResult.isValid === false, '未知の使用単位はエラー');
 
-// 7-9. applyRounding 繝・せ繝・assert(calc.applyRounding(933.33, 'round') === 933, '蝗帶昏莠泌・: 933.33 -> 933');
-assert(calc.applyRounding(933.5, 'round') === 934, '蝗帶昏莠泌・: 933.5 -> 934');
-assert(calc.applyRounding(933.33, 'ceil') === 934, '螟ｩ莠暮未謨ｰ: 933.33 -> 934');
-assert(calc.applyRounding(933.99, 'floor') === 933, '蠎企未謨ｰ: 933.99 -> 933');
-assert(calc.applyRounding(935, 'round10') === 940, '10蜀・ｸｸ繧・ 935 -> 940');
-assert(calc.applyRounding(932, 'ceil10') === 940, '10蜀・､ｩ莠・ 932 -> 940');
-assert(calc.applyRounding(NaN, 'round') === 0, 'NaN縺ｯ0繧定ｿ斐☆');
+// 7-9. applyRounding テスト
+assert(calc.applyRounding(933.33, 'round') === 933, '四捨五入: 933.33 -> 933');
+assert(calc.applyRounding(933.5, 'round') === 934, '四捨五入: 933.5 -> 934');
+assert(calc.applyRounding(933.33, 'ceil') === 934, '天井関数: 933.33 -> 934');
+assert(calc.applyRounding(933.99, 'floor') === 933, '床関数: 933.99 -> 933');
+assert(calc.applyRounding(935, 'round10') === 940, '10円丸め: 935 -> 940');
+assert(calc.applyRounding(932, 'ceil10') === 940, '10円天井: 932 -> 940');
+assert(calc.applyRounding(NaN, 'round') === 0, 'NaNは0を返す');
 
-// 7-10. getCostRateStatus 繝・せ繝・const status0 = calc.getCostRateStatus(0);
-assert(status0.level === 'normal', '蜴滉ｾ｡邇・%: normal繝ｬ繝吶Ν');
+// 7-10. getCostRateStatus テスト
+const status0 = calc.getCostRateStatus(0);
+assert(status0.level === 'normal', '原価率0%: normalレベル');
 
 const status20 = calc.getCostRateStatus(20);
-assert(status20.level === 'good', '蜴滉ｾ｡邇・0%: good繝ｬ繝吶Ν (蜆ｪ遘)');
+assert(status20.level === 'good', '原価率20%: goodレベル (優秀)');
 
 const status30 = calc.getCostRateStatus(30);
-assert(status30.level === 'normal', '蜴滉ｾ｡邇・0%: normal繝ｬ繝吶Ν (驕ｩ豁｣)');
+assert(status30.level === 'normal', '原価率30%: normalレベル (適正)');
 
 const status40 = calc.getCostRateStatus(40);
-assert(status40.level === 'warning', '蜴滉ｾ｡邇・0%: warning繝ｬ繝吶Ν (鬮倥ａ)');
+assert(status40.level === 'warning', '原価率40%: warningレベル (高め)');
 
 const status80 = calc.getCostRateStatus(80);
-assert(status80.level === 'danger', '蜴滉ｾ｡邇・0%: danger繝ｬ繝吶Ν (隴ｦ謌・');
+assert(status80.level === 'danger', '原価率80%: dangerレベル (警戒)');
 
 const status150 = calc.getCostRateStatus(150);
-assert(status150.level === 'danger', '蜴滉ｾ｡邇・50%: danger繝ｬ繝吶Ν (襍､蟄・');
+assert(status150.level === 'danger', '原価率150%: dangerレベル (赤字)');
 
-// 7-11. 譚先侭蜷阪↑縺励・蝠・刀蜷阪↑縺励ユ繧ｹ繝・const noNameResult = calc.calculateCostSummary({
+// 7-11. 材料名なし・商品名なしテスト
+const noNameResult = calc.calculateCostSummary({
     materials: [
         { id: '1', name: '', usageAmount: 100, usageUnit: 'g', purchaseAmount: 1, purchaseUnit: 'kg', purchasePrice: 1000 }
     ],
     sellingPrice: 1000
 });
-assert(noNameResult.totalCost === 100, '譚先侭蜷阪↑縺励〒繧ょ次萓｡險育ｮ励・蜿ｯ閭ｽ');
+assert(noNameResult.totalCost === 100, '材料名なしでも原価計算は可能');
 
 const noNameText = storage.formatResultAsText({
     productName: '',
     summary: noNameResult
 });
-assert(noNameText.includes('蜷咲ｧｰ譛ｪ險ｭ螳壹・蝠・刀'), '蝠・刀蜷阪↑縺励・縲悟錐遘ｰ譛ｪ險ｭ螳壹・蝠・刀縲阪→縺励※蜃ｺ蜉・);
+assert(noNameText.includes('名称未設定の商品'), '商品名なしは「名称未設定の商品」として出力');
 
-// 7-12. 蜈ｨ譚先侭辟｡蜉ｹ繧ｱ繝ｼ繧ｹ
+// 7-12. 全材料無効ケース
 const allInvalidResult = calc.calculateCostSummary({
     materials: [
         { id: '1', usageAmount: -10, usageUnit: 'g', purchaseAmount: 1, purchaseUnit: 'kg', purchasePrice: 1000 },
@@ -157,11 +163,12 @@ const allInvalidResult = calc.calculateCostSummary({
     ],
     sellingPrice: 1000
 });
-assert(allInvalidResult.totalCost === 0, '蜈ｨ譚先侭辟｡蜉ｹ縺ｧ繧ょ粋險亥次萓｡縺ｯ0 (繧ｨ繝ｩ繝ｼ蜃ｦ逅・ｶ咏ｶ・');
-assert(allInvalidResult.materials.every(m => m.isValid === false), '蜈ｨ譚先侭縺ｮisValid縺掲alse');
+assert(allInvalidResult.totalCost === 0, '全材料無効でも合計原価は0 (エラー処理継続)');
+assert(allInvalidResult.materials.every(m => m.isValid === false), '全材料のisValidがfalse');
 
-// 7-13. 繝・く繧ｹ繝医ヵ繧ｩ繝ｼ繝槭ャ繝亥｢・阜繝・せ繝・const emptyMaterialsText = storage.formatResultAsText({
-    productName: '繝・せ繝亥膚蜩・,
+// 7-13. テキストフォーマット境界テスト
+const emptyMaterialsText = storage.formatResultAsText({
+    productName: 'テスト商品',
     summary: {
         ...calc.calculateCostSummary({ materials: [], sellingPrice: 0 }),
         costRate: 0,
@@ -169,9 +176,9 @@ assert(allInvalidResult.materials.every(m => m.isValid === false), '蜈ｨ譚先
         grossProfitRate: 0
     }
 });
-assert(emptyMaterialsText.includes('繝・せ繝亥膚蜩・), '蝠・刀蜷阪ｒ蜷ｫ繧蜃ｺ蜉・);
-assert(emptyMaterialsText.includes('----------------------------------------'), '蛹ｺ蛻・ｊ邱壹′蜷ｫ縺ｾ繧後ｋ');
+assert(emptyMaterialsText.includes('テスト商品'), '商品名を含む出力');
+assert(emptyMaterialsText.includes('----------------------------------------'), '区切り線が含まれる');
 
 console.log(`\n========================================`);
-console.log(`繝・せ繝亥ｮ御ｺ・ PASS ${passed}莉ｶ / FAIL ${failed}莉ｶ`);
+console.log(`テスト完了: PASS ${passed}件 / FAIL ${failed}件`);
 if (failed > 0) process.exit(1);

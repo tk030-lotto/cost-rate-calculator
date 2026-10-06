@@ -1,6 +1,6 @@
-﻿/**
+/**
  * @file app.js
- * @description 繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ繧ｨ繝ｳ繝医Μ繝ｼ繝昴う繝ｳ繝医∫憾諷狗ｮ｡逅・・繧､繝吶Φ繝育ｵｱ諡ｬ
+ * @description アプリケーションエントリーポイント、状態管理・イベント統括
  */
 
 (function(global) {
@@ -116,7 +116,7 @@
         state = JSON.parse(JSON.stringify(preset));
         syncInputsFromState();
         saveAndRender();
-        showToast(`繝励Μ繧ｻ繝・ヨ縲・{preset.name}縲阪ｒ隱ｭ縺ｿ霎ｼ縺ｿ縺ｾ縺励◆`);
+        showToast(`プリセット「${preset.name}」を読み込みました`);
     }
 
     function syncInputsFromState() {
@@ -152,7 +152,7 @@
                     item[field] = value;
                     if (field === 'usageUnit' && (!item.purchaseUnit || item.purchaseUnit === 'g')) {
                         if (item.usageUnit === 'ml') item.purchaseUnit = 'L';
-                        else if (item.usageUnit === '蛟・) item.purchaseUnit = '蛟・;
+                        else if (item.usageUnit === '個') item.purchaseUnit = '個';
                     }
                     saveAndRender();
                 }
@@ -196,14 +196,14 @@
         });
 
         navigator.clipboard.writeText(text).then(() => {
-            showToast('搭 險育ｮ礼ｵ先棡繧偵け繝ｪ繝・・繝懊・繝峨↓繧ｳ繝斐・縺励∪縺励◆');
+            showToast('📋 計算結果をクリップボードにコピーしました');
         }).catch(() => {
-            showToast('繧ｳ繝斐・縺ｫ螟ｱ謨励＠縺ｾ縺励◆');
+            showToast('コピーに失敗しました');
         });
     }
 
     function handleClearAll() {
-        if (confirm('蜈･蜉帙ｒ縺吶∋縺ｦ繝ｪ繧ｻ繝・ヨ縺励∪縺吶°・・)) {
+        if (confirm('入力をすべてリセットしますか？')) {
             storageMod.clearState();
             state = {
                 productName: '',
@@ -213,7 +213,7 @@
             };
             syncInputsFromState();
             saveAndRender();
-            showToast('蜈･蜉帙ｒ繝ｪ繧ｻ繝・ヨ縺励∪縺励◆');
+            showToast('入力をリセットしました');
         }
     }
 

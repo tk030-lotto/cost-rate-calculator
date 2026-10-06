@@ -1,6 +1,6 @@
-﻿/**
+/**
  * @file render.js
- * @description UI謠冗判繝ｻDOM讒狗ｯ峨Δ繧ｸ繝･繝ｼ繝ｫ
+ * @description UI描画・DOM構築モジュール
  */
 
 (function(global) {
@@ -29,7 +29,7 @@
 
     function renderMaterialsList({ container, countBadge, materials, onFieldChange, onRemove }) {
         container.innerHTML = '';
-        countBadge.textContent = `${materials.length}莉ｶ`;
+        countBadge.textContent = `${materials.length}件`;
 
         materials.forEach((m) => {
             const itemEl = document.createElement('div');
@@ -38,24 +38,24 @@
 
             itemEl.innerHTML = `
                 <div class="material-header-row">
-                    <input type="text" class="form-input material-name-input" placeholder="譚先侭蜷・(萓・ 縺ｲ縺崎ｉ)" value="${escapeHtml(m.name)}" data-field="name">
-                    <button type="button" class="btn-remove" title="蜑企勁" aria-label="譚先侭繧貞炎髯､">
+                    <input type="text" class="form-input material-name-input" placeholder="材料名 (例: ひき肉)" value="${escapeHtml(m.name)}" data-field="name">
+                    <button type="button" class="btn-remove" title="削除" aria-label="材料を削除">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                 </div>
                 <div class="material-fields-grid">
                     <div>
-                        <label class="form-label" style="font-size:0.75rem;">菴ｿ逕ｨ驥・/label>
+                        <label class="form-label" style="font-size:0.75rem;">使用量</label>
                         <input type="number" class="form-input" value="${m.usageAmount}" step="any" min="0" data-field="usageAmount">
                     </div>
                     <div>
-                        <label class="form-label" style="font-size:0.75rem;">菴ｿ逕ｨ蜊倅ｽ・/label>
+                        <label class="form-label" style="font-size:0.75rem;">使用単位</label>
                         <select class="form-select" data-field="usageUnit">
                             ${renderUnitOptions(m.usageUnit)}
                         </select>
                     </div>
                     <div>
-                        <label class="form-label" style="font-size:0.75rem;">莉募・驥・(蜊倅ｽ・</label>
+                        <label class="form-label" style="font-size:0.75rem;">仕入量 (単位)</label>
                         <div style="display:flex; gap:4px;">
                             <input type="number" class="form-input" style="flex:1;" value="${m.purchaseAmount}" step="any" min="0.001" data-field="purchaseAmount">
                             <select class="form-select" style="width:70px;" data-field="purchaseUnit">
@@ -64,13 +64,13 @@
                         </div>
                     </div>
                     <div>
-                        <label class="form-label" style="font-size:0.75rem;">莉募・萓｡譬ｼ(蜀・</label>
+                        <label class="form-label" style="font-size:0.75rem;">仕入価格(円)</label>
                         <input type="number" class="form-input" value="${m.purchasePrice}" step="1" min="0" data-field="purchasePrice">
                     </div>
                 </div>
                 <div class="material-calc-footer">
-                    <span style="color:var(--text-muted);">邂怜・蜴滉ｾ｡:</span>
-                    <span class="material-cost-val" id="cost-val-${m.id}">ﾂ･0</span>
+                    <span style="color:var(--text-muted);">算出原価:</span>
+                    <span class="material-cost-val" id="cost-val-${m.id}">¥0</span>
                 </div>
             `;
 
@@ -108,21 +108,21 @@
             const el = document.getElementById(`cost-val-${m.id}`);
             if (el) {
                 if (m.isValid) {
-                    el.textContent = `ﾂ･${Math.round(m.calculatedCost).toLocaleString()} (${m.calculatedCost.toFixed(1)}蜀・`;
+                    el.textContent = `¥${Math.round(m.calculatedCost).toLocaleString()} (${m.calculatedCost.toFixed(1)}円)`;
                     el.style.color = 'var(--accent-emerald)';
                 } else {
-                    el.textContent = m.error || '險育ｮ嶺ｸ榊庄';
+                    el.textContent = m.error || '計算不可';
                     el.style.color = 'var(--accent-rose)';
                 }
             }
         });
 
-        resTotalCost.textContent = `ﾂ･${Math.round(summary.totalCost).toLocaleString()}`;
-        resSellingPrice.textContent = `ﾂ･${Math.round(summary.sellingPrice).toLocaleString()}`;
+        resTotalCost.textContent = `¥${Math.round(summary.totalCost).toLocaleString()}`;
+        resSellingPrice.textContent = `¥${Math.round(summary.sellingPrice).toLocaleString()}`;
 
         if (summary.sellingPrice > 0) {
             resCostRate.innerHTML = `${summary.costRate.toFixed(1)}<span style="font-size: 1.4rem;">%</span>`;
-            resGrossProfit.textContent = `ﾂ･${Math.round(summary.grossProfit).toLocaleString()}`;
+            resGrossProfit.textContent = `¥${Math.round(summary.grossProfit).toLocaleString()}`;
             resGrossProfitRate.textContent = `${summary.grossProfitRate.toFixed(1)}%`;
 
             const calcMod = getCalcModule();
@@ -133,16 +133,16 @@
         } else {
             resCostRate.innerHTML = `0.0<span style="font-size: 1.4rem;">%</span>`;
             resCostRate.className = 'gauge-value';
-            resGrossProfit.textContent = `ﾂ･0`;
+            resGrossProfit.textContent = `¥0`;
             resGrossProfitRate.textContent = `0.0%`;
-            resGaugeBadge.textContent = '雋ｩ螢ｲ萓｡譬ｼ繧貞・蜉帙＠縺ｦ縺上□縺輔＞';
+            resGaugeBadge.textContent = '販売価格を入力してください';
             resGaugeBadge.className = 'gauge-status-badge';
         }
 
         if (summary.targetCostRate && summary.targetSellingPrice) {
             reverseCalcBox.style.display = 'block';
-            resTargetRateLabel.textContent = `逶ｮ讓・${summary.targetCostRate}%`;
-            resTargetSellingPrice.textContent = `ﾂ･${summary.targetSellingPrice.toLocaleString()}`;
+            resTargetRateLabel.textContent = `目標 ${summary.targetCostRate}%`;
+            resTargetSellingPrice.textContent = `¥${summary.targetSellingPrice.toLocaleString()}`;
         } else {
             reverseCalcBox.style.display = 'none';
         }

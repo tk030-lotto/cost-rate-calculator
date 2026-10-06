@@ -1,6 +1,6 @@
-﻿/**
+/**
  * @file calculator.js
- * @description 蜴滉ｾ｡邇・∫ｲ怜茜縲∫ｲ怜茜邇・∫岼讓咎・ｮ苓ｲｩ螢ｲ萓｡譬ｼ縺ｮ邊ｾ蟇・ｨ育ｮ励Ο繧ｸ繝・け
+ * @description 原価率、粗利、粗利率、目標逆算販売価格の精密計算ロジック
  */
 
 (function(global) {
@@ -66,7 +66,9 @@
         let targetSellingPrice = null;
         const validTargetRate = typeof targetCostRate === 'number' && !isNaN(targetCostRate) && targetCostRate > 0 && targetCostRate <= 100 ? targetCostRate : null;
 
-        // 騾・ｮ嶺ｾ｡譬ｼ縺ｯ縲瑚ｲｩ螢ｲ萓｡譬ｼ > 0縲阪°縺､縲悟次萓｡ > 0縲阪・譚｡莉ｶ荳九〒縺ｮ縺ｿ險育ｮ・        // 莉墓ｧ俶嶌 13遽: 縲・莉･荳九・雋ｩ螢ｲ萓｡譬ｼ縺ｯ辟｡蜉ｹ縲阪→縺吶ｋ譁ｹ驥昴↓謨ｴ蜷・        if (validTargetRate !== null && totalCost > 0 && validSellingPrice > 0) {
+        // 逆算価格は「販売価格 > 0」かつ「原価 > 0」の条件下でのみ計算
+        // 仕様書 13節: 「0以下の販売価格は無効」とする方針に整合
+        if (validTargetRate !== null && totalCost > 0 && validSellingPrice > 0) {
             const rawTargetPrice = totalCost / (validTargetRate / 100);
             targetSellingPrice = applyRounding(rawTargetPrice, roundingMode);
         }
@@ -104,21 +106,21 @@
 
     function getCostRateStatus(costRate) {
         if (costRate <= 0) {
-            return { level: 'normal', label: '-', description: '雋ｩ螢ｲ萓｡譬ｼ繧貞・蜉帙＠縺ｦ縺上□縺輔＞' };
+            return { level: 'normal', label: '-', description: '販売価格を入力してください' };
         }
         if (costRate <= 25) {
-            return { level: 'good', label: '蜆ｪ遘', description: '髱槫ｸｸ縺ｫ鬮倥＞蛻ｩ逶顔紫繧堤｢ｺ菫昴〒縺阪※縺・∪縺・ };
+            return { level: 'good', label: '優秀', description: '非常に高い利益率を確保できています' };
         }
         if (costRate <= 35) {
-            return { level: 'normal', label: '驕ｩ豁｣', description: '鬟ｲ鬟溘・蟆丞｣ｲ縺ｮ讓呎ｺ也噪縺ｪ逶ｮ螳会ｼ・0%蜑榊ｾ鯉ｼ峨・遽・峇蜀・〒縺・ };
+            return { level: 'normal', label: '適正', description: '飲食・小売の標準的な目安（30%前後）の範囲内です' };
         }
         if (costRate <= 50) {
-            return { level: 'warning', label: '鬮倥ａ', description: '蜴滉ｾ｡邇・′鬮倥ａ縺ｧ縺吶ゆｻ募・繧・ｾ｡譬ｼ縺ｮ隱ｿ謨ｴ繧呈耳螂ｨ縺励∪縺・ };
+            return { level: 'warning', label: '高め', description: '原価率が高めです。仕入や価格の調整を推奨します' };
         }
         if (costRate <= 100) {
-            return { level: 'danger', label: '隴ｦ謌・, description: '邊怜茜縺梧･ｵ繧√※蟆代↑縺丞崋螳夊ｲｻ蝗槫庶縺ｮ繝ｪ繧ｹ繧ｯ縺後≠繧翫∪縺・ };
+            return { level: 'danger', label: '警戒', description: '粗利が極めて少なく固定費回収のリスクがあります' };
         }
-        return { level: 'danger', label: '襍､蟄・, description: '蜴滉ｾ｡縺瑚ｲｩ螢ｲ萓｡譬ｼ繧定ｶ・℃縺励※縺翫ｊ襍､蟄励〒縺・ };
+        return { level: 'danger', label: '赤字', description: '原価が販売価格を超過しており赤字です' };
     }
 
     const exports = {
@@ -134,4 +136,3 @@
         global.CostCalcCalculator = exports;
     }
 })(typeof window !== 'undefined' ? window : globalThis);
-

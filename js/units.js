@@ -1,29 +1,29 @@
-﻿/**
+/**
  * @file units.js
- * @description 蜊倅ｽ榊､画鋤縺翫ｈ縺ｳ豁｣隕丞喧繧ｨ繝ｳ繧ｸ繝ｳ
+ * @description 単位変換および正規化エンジン
  */
 
 (function(global) {
     const UNIT_DEFINITIONS = {
-        // 驥埼㍼邉ｻ (蝓ｺ貅・ g)
-        g: { category: 'weight', factor: 1, label: 'g (繧ｰ繝ｩ繝)' },
-        kg: { category: 'weight', factor: 1000, label: 'kg (繧ｭ繝ｭ繧ｰ繝ｩ繝)' },
+        // 重量系 (基準: g)
+        g: { category: 'weight', factor: 1, label: 'g (グラム)' },
+        kg: { category: 'weight', factor: 1000, label: 'kg (キログラム)' },
         
-        // 螳ｹ驥冗ｳｻ (蝓ｺ貅・ ml)
-        ml: { category: 'volume', factor: 1, label: 'ml (繝溘Μ繝ｪ繝・ヨ繝ｫ)' },
-        cc: { category: 'volume', factor: 1, label: 'cc (繧ｷ繝ｼ繧ｷ繝ｼ)' },
-        L: { category: 'volume', factor: 1000, label: 'L (繝ｪ繝・ヨ繝ｫ)' },
-        l: { category: 'volume', factor: 1000, label: 'L (繝ｪ繝・ヨ繝ｫ)' },
+        // 容量系 (基準: ml)
+        ml: { category: 'volume', factor: 1, label: 'ml (ミリリットル)' },
+        cc: { category: 'volume', factor: 1, label: 'cc (シーシー)' },
+        L: { category: 'volume', factor: 1000, label: 'L (リットル)' },
+        l: { category: 'volume', factor: 1000, label: 'L (リットル)' },
 
-        // 蛟区焚邉ｻ (蝓ｺ貅・ 1)
-        蛟・ { category: 'count', factor: 1, label: '蛟・ },
-        譛ｬ: { category: 'count', factor: 1, label: '譛ｬ' },
-        譫・ { category: 'count', factor: 1, label: '譫・ },
-        繝代ャ繧ｯ: { category: 'count', factor: 1, label: '繝代ャ繧ｯ' },
-        陲・ { category: 'count', factor: 1, label: '陲・ },
-        鬟・ { category: 'count', factor: 1, label: '鬟・ },
-        謚・ { category: 'count', factor: 1, label: '謚・ },
-        郛ｶ: { category: 'count', factor: 1, label: '郛ｶ' }
+        // 個数系 (基準: 1)
+        個: { category: 'count', factor: 1, label: '個' },
+        本: { category: 'count', factor: 1, label: '本' },
+        枚: { category: 'count', factor: 1, label: '枚' },
+        パック: { category: 'count', factor: 1, label: 'パック' },
+        袋: { category: 'count', factor: 1, label: '袋' },
+        食: { category: 'count', factor: 1, label: '食' },
+        把: { category: 'count', factor: 1, label: '把' },
+        缶: { category: 'count', factor: 1, label: '缶' }
     };
 
     function getUnitCategory(unit) {
@@ -61,7 +61,7 @@
             typeof purchaseAmount !== 'number' || isNaN(purchaseAmount) || purchaseAmount <= 0 ||
             typeof purchasePrice !== 'number' || isNaN(purchasePrice) || purchasePrice < 0
         ) {
-            return { cost: 0, isValid: false, error: '蜈･蜉帛､縺檎┌蜉ｹ縺ｧ縺・ };
+            return { cost: 0, isValid: false, error: '入力値が無効です' };
         }
 
         if (usageAmount === 0 || purchasePrice === 0) {
@@ -77,13 +77,13 @@
             return { 
                 cost: 0, 
                 isValid: false, 
-                error: `蜊倅ｽ阪・{usageUnit}縲阪→縲・{purchaseUnit}縲阪・螟画鋤縺ｧ縺阪∪縺帙ｓ` 
+                error: `単位「${usageUnit}」と「${purchaseUnit}」は変換できません` 
             };
         }
 
         const convertedUsage = convertUnit(usageAmount, usageUnit, purchaseUnit);
         if (convertedUsage === null) {
-            return { cost: 0, isValid: false, error: '蜊倅ｽ榊､画鋤縺ｫ螟ｱ謨励＠縺ｾ縺励◆' };
+            return { cost: 0, isValid: false, error: '単位変換に失敗しました' };
         }
 
         const cost = (convertedUsage / purchaseAmount) * purchasePrice;
