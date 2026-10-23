@@ -40,3 +40,6 @@ AGENTS.md
 CLAUDE.md
 GEMINI.md
 .roorules
+
+# 開発ドキュメント（個人パス混入防止）
+audit_report*.md
