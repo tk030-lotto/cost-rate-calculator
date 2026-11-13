@@ -50,3 +50,6 @@ PRIMARY-REVIEW-*.md
 # 仕様書除外（フェーズ2-C-β）
 SPECIFICATION*.md
 仕様書*.md
+
+# Playwright MCP 一時ログ
+.playwright-mcp/
