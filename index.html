@@ -163,6 +163,18 @@
     </footer>
   </div>
 
+  <!-- Confirm Dialog -->
+  <div id="confirm-dialog" class="confirm-dialog-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-desc">
+    <div class="confirm-dialog">
+      <h2 id="confirm-dialog-title" class="confirm-dialog-title">入力のリセット確認</h2>
+      <p id="confirm-dialog-desc" class="confirm-dialog-desc">入力をすべてリセットしますか？</p>
+      <div class="confirm-dialog-actions">
+        <button type="button" id="btn-confirm-cancel" class="btn-secondary">キャンセル</button>
+        <button type="button" id="btn-confirm-ok" class="btn-danger">リセットする</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div id="toast" class="toast" role="alert" aria-live="polite"></div>
 

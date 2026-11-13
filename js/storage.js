@@ -59,18 +59,68 @@
         }
     ];
 
+    function normalizeUnit(unit) {
+        return unit === 'l' ? 'L' : unit;
+    }
+
+    function validateAndNormalizeMaterial(item) {
+        if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+        if (typeof item.id !== 'string' || item.id.trim().length === 0 || /[<>"'&]/.test(item.id)) return null;
+        if (typeof item.name !== 'string') return null;
+        if (typeof item.usageAmount !== 'number' || !Number.isFinite(item.usageAmount) || item.usageAmount < 0) return null;
+        if (typeof item.usageUnit !== 'string' || item.usageUnit.length === 0) return null;
+        if (typeof item.purchaseAmount !== 'number' || !Number.isFinite(item.purchaseAmount) || item.purchaseAmount < 0) return null;
+        if (typeof item.purchaseUnit !== 'string' || item.purchaseUnit.length === 0) return null;
+        if (typeof item.purchasePrice !== 'number' || !Number.isFinite(item.purchasePrice) || item.purchasePrice < 0) return null;
+
+        return {
+            id: item.id,
+            name: item.name,
+            usageAmount: item.usageAmount,
+            usageUnit: normalizeUnit(item.usageUnit),
+            purchaseAmount: item.purchaseAmount,
+            purchaseUnit: normalizeUnit(item.purchaseUnit),
+            purchasePrice: item.purchasePrice
+        };
+    }
+
+    function validateAndNormalizeState(raw) {
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+        if (!Array.isArray(raw.materials)) return null;
+
+        const productName = typeof raw.productName === 'string' ? raw.productName : '';
+        const sellingPrice = typeof raw.sellingPrice === 'number' && Number.isFinite(raw.sellingPrice) && raw.sellingPrice >= 0
+            ? raw.sellingPrice
+            : 0;
+        const targetCostRate = typeof raw.targetCostRate === 'number' && Number.isFinite(raw.targetCostRate) && raw.targetCostRate >= 0
+            ? raw.targetCostRate
+            : 0;
+        const materials = raw.materials.map(validateAndNormalizeMaterial).filter(Boolean);
+
+        return {
+            productName,
+            sellingPrice,
+            targetCostRate,
+            materials
+        };
+    }
+
     function saveState(state) {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            return true;
         } catch (e) {
             console.warn('LocalStorage save failed:', e);
+            return false;
         }
     }
 
     function loadState() {
         try {
             const data = localStorage.getItem(STORAGE_KEY);
-            return data ? JSON.parse(data) : null;
+            if (!data) return null;
+            const parsed = JSON.parse(data);
+            return validateAndNormalizeState(parsed);
         } catch (e) {
             console.warn('LocalStorage load failed:', e);
             return null;
@@ -80,8 +130,10 @@
     function clearState() {
         try {
             localStorage.removeItem(STORAGE_KEY);
+            return true;
         } catch (e) {
             console.warn('LocalStorage clear failed:', e);
+            return false;
         }
     }
 
@@ -109,7 +161,7 @@
         text += `粗利益額     : ¥${Math.round(summary.grossProfit).toLocaleString()}\n`;
         text += `粗利益率     : ${summary.grossProfitRate.toFixed(1)}%\n`;
 
-        if (summary.targetCostRate && summary.targetSellingPrice) {
+        if (typeof summary.targetCostRate === 'number' && summary.targetCostRate > 0 && typeof summary.targetSellingPrice === 'number') {
             text += `\n■ 目標原価率シミュレーション\n`;
             text += `目標原価率   : ${summary.targetCostRate}%\n`;
             text += `必要販売価格 : ¥${summary.targetSellingPrice.toLocaleString()} (逆算値)\n`;

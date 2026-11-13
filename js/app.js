@@ -26,7 +26,11 @@
     let btnAddMaterial;
     let btnCopyResult;
     let btnClearAll;
+    let confirmDialog;
+    let btnConfirmCancel;
+    let btnConfirmOk;
     let toastEl;
+    let toastTimer = null;
     let resultElements;
 
     function init() {
@@ -38,6 +42,9 @@
         btnAddMaterial = document.getElementById('btn-add-material');
         btnCopyResult = document.getElementById('btn-copy-result');
         btnClearAll = document.getElementById('btn-clear-all');
+        confirmDialog = document.getElementById('confirm-dialog');
+        btnConfirmCancel = document.getElementById('btn-confirm-cancel');
+        btnConfirmOk = document.getElementById('btn-confirm-ok');
         toastEl = document.getElementById('toast');
 
         resultElements = {
@@ -55,7 +62,7 @@
         setupEventListeners();
 
         const saved = storageMod.loadState();
-        if (saved && Array.isArray(saved.materials) && saved.materials.length > 0) {
+        if (saved !== null) {
             state = saved;
             syncInputsFromState();
         } else {
@@ -107,6 +114,25 @@
                 if (presetId) loadPreset(presetId);
             });
         });
+
+        if (btnConfirmCancel) {
+            btnConfirmCancel.addEventListener('click', closeConfirmDialog);
+        }
+        if (btnConfirmOk) {
+            btnConfirmOk.addEventListener('click', executeClearAll);
+        }
+        if (confirmDialog) {
+            confirmDialog.addEventListener('click', (e) => {
+                if (e.target === confirmDialog) {
+                    closeConfirmDialog();
+                }
+            });
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && confirmDialog && !confirmDialog.hidden) {
+                closeConfirmDialog();
+            }
+        });
     }
 
     function loadPreset(presetId) {
@@ -114,6 +140,7 @@
         if (!preset) return;
 
         state = JSON.parse(JSON.stringify(preset));
+        state.productName = preset.name || '';
         syncInputsFromState();
         saveAndRender();
         showToast(`プリセット「${preset.name}」を読み込みました`);
@@ -166,8 +193,11 @@
     }
 
     function saveAndRender() {
-        storageMod.saveState(state);
+        const savedOk = storageMod.saveState(state);
         render();
+        if (!savedOk) {
+            showToast('データの保存に失敗しました（ブラウザの保存領域・設定をご確認ください）');
+        }
     }
 
     function render() {
@@ -195,34 +225,62 @@
             summary
         });
 
-        navigator.clipboard.writeText(text).then(() => {
-            showToast('📋 計算結果をクリップボードにコピーしました');
-        }).catch(() => {
+        if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+            showToast('この環境ではクリップボードへのコピーを利用できません');
+            return;
+        }
+
+        try {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('📋 計算結果をクリップボードにコピーしました');
+            }).catch(() => {
+                showToast('コピーに失敗しました');
+            });
+        } catch (e) {
             showToast('コピーに失敗しました');
-        });
+        }
     }
 
     function handleClearAll() {
-        if (confirm('入力をすべてリセットしますか？')) {
-            storageMod.clearState();
-            state = {
-                productName: '',
-                sellingPrice: 1000,
-                targetCostRate: 30,
-                materials: []
-            };
-            syncInputsFromState();
-            saveAndRender();
-            showToast('入力をリセットしました');
+        if (!confirmDialog) return;
+        confirmDialog.hidden = false;
+        if (btnConfirmCancel) {
+            btnConfirmCancel.focus();
         }
+    }
+
+    function closeConfirmDialog() {
+        if (!confirmDialog) return;
+        confirmDialog.hidden = true;
+        if (btnClearAll) {
+            btnClearAll.focus();
+        }
+    }
+
+    function executeClearAll() {
+        closeConfirmDialog();
+        storageMod.clearState();
+        state = {
+            productName: '',
+            sellingPrice: 1000,
+            targetCostRate: 30,
+            materials: []
+        };
+        syncInputsFromState();
+        saveAndRender();
+        showToast('入力をリセットしました');
     }
 
     function showToast(msg) {
         if (!toastEl) return;
         toastEl.textContent = msg;
         toastEl.classList.add('show');
-        setTimeout(() => {
+        if (toastTimer !== null) {
+            clearTimeout(toastTimer);
+        }
+        toastTimer = setTimeout(() => {
             toastEl.classList.remove('show');
+            toastTimer = null;
         }, 2800);
     }
 

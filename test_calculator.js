@@ -35,8 +35,13 @@ console.log('=== 1. 単位変換テスト ===');
 assert(units.areUnitsCompatible('g', 'kg') === true, 'g と kg は互換性あり');
 assert(units.areUnitsCompatible('ml', 'L') === true, 'ml と L は互換性あり');
 assert(units.areUnitsCompatible('g', 'L') === false, 'g と L は互換性なし');
+assert(units.areUnitsCompatible('cm', 'm') === true, 'cm と m は互換性あり');
+assert(units.areUnitsCompatible('mm', 'm') === true, 'mm と m は互換性あり');
+assert(units.areUnitsCompatible('m', 'g') === false, 'm と g は互換性なし');
 assert(units.convertUnit(150, 'g', 'kg') === 0.15, '150g -> 0.15kg');
 assert(units.convertUnit(2, 'L', 'ml') === 2000, '2L -> 2000ml');
+assert(units.convertUnit(150, 'cm', 'm') === 1.5, '150cm -> 1.5m');
+assert(units.convertUnit(2500, 'mm', 'm') === 2.5, '2500mm -> 2.5m');
 
 console.log('\n=== 2. 材料原価計算テスト (仕様書記載例) ===');
 // 仕様書: ひき肉 150g, 仕入 1kg / 1,200円 -> 180円
@@ -102,6 +107,20 @@ const formattedText = storage.formatResultAsText({
 assert(formattedText.includes('【原価率・粗利 計算書】'), 'タイトルヘッダー確認');
 assert(formattedText.includes('合計商品原価 : ¥215'), '合計原価フォーマット確認');
 assert(formattedText.includes('原価率       : 21.9%'), '原価率フォーマット確認');
+
+console.log('\n=== 7. プリセット・単位定義整合性テスト ===');
+storage.PRESETS.forEach(preset => {
+    preset.materials.forEach(m => {
+        assert(
+            Object.prototype.hasOwnProperty.call(units.UNIT_DEFINITIONS, m.usageUnit),
+            `プリセット[${preset.id}] 材料[${m.name}] usageUnit(${m.usageUnit}) が UNIT_DEFINITIONS に存在`
+        );
+        assert(
+            Object.prototype.hasOwnProperty.call(units.UNIT_DEFINITIONS, m.purchaseUnit),
+            `プリセット[${preset.id}] 材料[${m.name}] purchaseUnit(${m.purchaseUnit}) が UNIT_DEFINITIONS に存在`
+        );
+    });
+});
 
 console.log(`\n========================================`);
 console.log(`テスト完了: PASS ${passed}件 / FAIL ${failed}件`);

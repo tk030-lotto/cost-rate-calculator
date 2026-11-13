@@ -13,7 +13,11 @@
         ml: { category: 'volume', factor: 1, label: 'ml (ミリリットル)' },
         cc: { category: 'volume', factor: 1, label: 'cc (シーシー)' },
         L: { category: 'volume', factor: 1000, label: 'L (リットル)' },
-        l: { category: 'volume', factor: 1000, label: 'L (リットル)' },
+
+        // 長さ系 (基準: m)
+        m: { category: 'length', factor: 1, label: 'm (メートル)' },
+        cm: { category: 'length', factor: 0.01, label: 'cm (センチメートル)' },
+        mm: { category: 'length', factor: 0.001, label: 'mm (ミリメートル)' },
 
         // 個数系 (基準: 1)
         個: { category: 'count', factor: 1, label: '個' },

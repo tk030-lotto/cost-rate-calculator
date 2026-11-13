@@ -15,14 +15,15 @@
     function renderUnitOptions(selectedUnit) {
         const unitsMod = getUnitsModule();
         return Object.keys(unitsMod.UNIT_DEFINITIONS).map(u => {
+            const safeU = escapeHtml(u);
             const isSel = u === selectedUnit ? 'selected' : '';
-            return `<option value="${u}" ${isSel}>${u}</option>`;
+            return `<option value="${safeU}" ${isSel}>${safeU}</option>`;
         }).join('');
     }
 
     function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>"']/g, m => ({
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, m => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         })[m]);
     }
@@ -33,8 +34,9 @@
 
         materials.forEach((m) => {
             const itemEl = document.createElement('div');
+            const safeId = escapeHtml(m.id);
             itemEl.className = 'material-item';
-            itemEl.dataset.id = m.id;
+            itemEl.dataset.id = String(m.id);
 
             itemEl.innerHTML = `
                 <div class="material-header-row">
@@ -46,7 +48,7 @@
                 <div class="material-fields-grid">
                     <div>
                         <label class="form-label" style="font-size:0.75rem;">使用量</label>
-                        <input type="number" class="form-input" value="${m.usageAmount}" step="any" min="0" data-field="usageAmount">
+                        <input type="number" class="form-input" value="${escapeHtml(m.usageAmount)}" step="any" min="0" data-field="usageAmount">
                     </div>
                     <div>
                         <label class="form-label" style="font-size:0.75rem;">使用単位</label>
@@ -57,7 +59,7 @@
                     <div>
                         <label class="form-label" style="font-size:0.75rem;">仕入量 (単位)</label>
                         <div style="display:flex; gap:4px;">
-                            <input type="number" class="form-input" style="flex:1;" value="${m.purchaseAmount}" step="any" min="0.001" data-field="purchaseAmount">
+                            <input type="number" class="form-input" style="flex:1;" value="${escapeHtml(m.purchaseAmount)}" step="any" min="0.001" data-field="purchaseAmount">
                             <select class="form-select" style="width:70px;" data-field="purchaseUnit">
                                 ${renderUnitOptions(m.purchaseUnit)}
                             </select>
@@ -65,12 +67,12 @@
                     </div>
                     <div>
                         <label class="form-label" style="font-size:0.75rem;">仕入価格(円)</label>
-                        <input type="number" class="form-input" value="${m.purchasePrice}" step="1" min="0" data-field="purchasePrice">
+                        <input type="number" class="form-input" value="${escapeHtml(m.purchasePrice)}" step="1" min="0" data-field="purchasePrice">
                     </div>
                 </div>
                 <div class="material-calc-footer">
                     <span style="color:var(--text-muted);">算出原価:</span>
-                    <span class="material-cost-val" id="cost-val-${m.id}">¥0</span>
+                    <span class="material-cost-val" id="cost-val-${safeId}">¥0</span>
                 </div>
             `;
 
@@ -126,7 +128,7 @@
             resGrossProfitRate.textContent = `${summary.grossProfitRate.toFixed(1)}%`;
 
             const calcMod = getCalcModule();
-            const status = calcMod.getCostRateStatus(summary.costRate);
+            const status = calcMod.getCostRateStatus(summary.costRate, summary.sellingPrice);
             resCostRate.className = `gauge-value status-${status.level}`;
             resGaugeBadge.textContent = `${status.label} : ${status.description}`;
             resGaugeBadge.className = `gauge-status-badge status-${status.level}`;
@@ -139,7 +141,7 @@
             resGaugeBadge.className = 'gauge-status-badge';
         }
 
-        if (summary.targetCostRate && summary.targetSellingPrice) {
+        if (typeof summary.targetCostRate === 'number' && summary.targetCostRate > 0 && typeof summary.targetSellingPrice === 'number') {
             reverseCalcBox.style.display = 'block';
             resTargetRateLabel.textContent = `目標 ${summary.targetCostRate}%`;
             resTargetSellingPrice.textContent = `¥${summary.targetSellingPrice.toLocaleString()}`;

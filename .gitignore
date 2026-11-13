@@ -26,6 +26,8 @@ Thumbs.db
 
 # Internal operational files (Common Rules)
 AI_RULES.md
+CORE-RULES.md
+UI-STANDARD.md
 SKILLS.md
 .cursorrules
 .clauderules
@@ -43,6 +45,7 @@ GEMINI.md
 
 # 開発ドキュメント（個人パス混入防止）
 audit_report*.md
+PRIMARY-REVIEW-*.md
 
 # 仕様書除外（フェーズ2-C-β）
 SPECIFICATION*.md

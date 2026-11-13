@@ -66,9 +66,9 @@
         let targetSellingPrice = null;
         const validTargetRate = typeof targetCostRate === 'number' && !isNaN(targetCostRate) && targetCostRate > 0 && targetCostRate <= 100 ? targetCostRate : null;
 
-        // 逆算価格は「販売価格 > 0」かつ「原価 > 0」の条件下でのみ計算
-        // 仕様書 13節: 「0以下の販売価格は無効」とする方針に整合
-        if (validTargetRate !== null && totalCost > 0 && validSellingPrice > 0) {
+        // 逆算価格は「原価 > 0」かつ「有効な目標原価率」があれば販売価格が 0 でも算出する
+        // 仕様書 13節の「0以下の販売価格は無効」は原価率・粗利・粗利率計算にのみ適用
+        if (validTargetRate !== null && totalCost > 0) {
             const rawTargetPrice = totalCost / (validTargetRate / 100);
             targetSellingPrice = applyRounding(rawTargetPrice, roundingMode);
         }
@@ -104,8 +104,11 @@
         }
     }
 
-    function getCostRateStatus(costRate) {
+    function getCostRateStatus(costRate, sellingPrice = 0) {
         if (costRate <= 0) {
+            if (typeof sellingPrice === 'number' && !isNaN(sellingPrice) && sellingPrice > 0) {
+                return { level: 'normal', label: '原価0', description: '材料原価が0円のため原価率は0.0%です' };
+            }
             return { level: 'normal', label: '-', description: '販売価格を入力してください' };
         }
         if (costRate <= 25) {

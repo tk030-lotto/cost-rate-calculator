@@ -41,7 +41,7 @@ const zeroPriceResult = calc.calculateCostSummary({
 });
 assert(zeroPriceResult.costRate === 0, '販売価格0円の原価率は0');
 assert(zeroPriceResult.grossProfit === 0, '販売価格0円の粗利は0');
-assert(zeroPriceResult.targetSellingPrice === null, '販売価格0円の逆算価格はnull');
+assert(zeroPriceResult.targetSellingPrice === 333, '販売価格0円でも原価・目標原価率があれば逆算価格を算出 (100 / 0.30 -> 333)');
 
 const zeroCostResult = calc.calculateCostSummary({
     materials: [{ id: '1', usageAmount: 0, usageUnit: 'g', purchaseAmount: 1, purchaseUnit: 'kg', purchasePrice: 1000 }],
@@ -101,8 +101,8 @@ console.log('\n=== F. 単位変換詳細テスト ===');
 
 // 7-7. 単位変換詳細テスト
 assert(units.areUnitsCompatible('cc', 'ml') === true, 'cc と ml は互換性あり (同系統)');
-assert(units.areUnitsCompatible('L', 'l') === true, 'L と l は同じ容量系');
-assert(units.convertUnit(1, 'L', 'l') === 1, 'L -> l 変換 (1:1 同値)');
+assert(!Object.prototype.hasOwnProperty.call(units.UNIT_DEFINITIONS, 'l'), 'UNIT_DEFINITIONS に重複した l が存在しない (L のみ)');
+assert(units.areUnitsCompatible('ml', 'L') === true, 'ml と L は同じ容量系');
 assert(units.convertUnit(500, 'ml', 'L') === 0.5, 'ml -> L 変換 (0.001倍)');
 assert(units.convertUnit(100, 'g', 'kg') === 0.1, 'g -> kg 変換 (0.001倍)');
 assert(units.convertUnit(5, 'kg', 'g') === 5000, 'kg -> g 変換 (1000倍)');
@@ -123,6 +123,11 @@ assert(calc.applyRounding(NaN, 'round') === 0, 'NaNは0を返す');
 // 7-10. getCostRateStatus テスト
 const status0 = calc.getCostRateStatus(0);
 assert(status0.level === 'normal', '原価率0%: normalレベル');
+assert(status0.description === '販売価格を入力してください', '原価率0%・販売価格0: 販売価格入力促し文言');
+
+const status0WithPrice = calc.getCostRateStatus(0, 1000);
+assert(status0WithPrice.level === 'normal', '原価率0%・販売価格1000: normalレベル');
+assert(status0WithPrice.label === '原価0' && status0WithPrice.description !== '販売価格を入力してください', '原価率0%・販売価格あり: 原価0用文言へ分岐');
 
 const status20 = calc.getCostRateStatus(20);
 assert(status20.level === 'good', '原価率20%: goodレベル (優秀)');
@@ -178,6 +183,67 @@ const emptyMaterialsText = storage.formatResultAsText({
 });
 assert(emptyMaterialsText.includes('テスト商品'), '商品名を含む出力');
 assert(emptyMaterialsText.includes('----------------------------------------'), '区切り線が含まれる');
+
+console.log('\n=== G. 永続化・スキーマ検証・正規化テスト ===');
+const mockStore = {};
+global.localStorage = {
+    getItem: (k) => (Object.prototype.hasOwnProperty.call(mockStore, k) ? mockStore[k] : null),
+    setItem: (k, v) => { mockStore[k] = String(v); },
+    removeItem: (k) => { delete mockStore[k]; }
+};
+
+assert(storage.loadState() === null, '未保存時は loadState() が null を返す');
+
+const emptyMaterialsState = { productName: '空レシピ', sellingPrice: 500, targetCostRate: 30, materials: [] };
+assert(storage.saveState(emptyMaterialsState) === true, '空配列 materials の保存に成功し true を返す');
+const loadedEmpty = storage.loadState();
+assert(loadedEmpty !== null && Array.isArray(loadedEmpty.materials) && loadedEmpty.materials.length === 0, '空配列 materials は有効な保存状態として復元される');
+
+const legacyLowerLState = {
+    productName: '牛乳テスト',
+    sellingPrice: 600,
+    targetCostRate: 25,
+    materials: [
+        { id: 'm1', name: '牛乳', usageAmount: 200, usageUnit: 'l', purchaseAmount: 1, purchaseUnit: 'l', purchasePrice: 200 }
+    ]
+};
+storage.saveState(legacyLowerLState);
+const normalizedState = storage.loadState();
+assert(
+    normalizedState.materials[0].usageUnit === 'L' && normalizedState.materials[0].purchaseUnit === 'L',
+    '保存データの単位 l が読み込み時に L へ正規化される'
+);
+
+mockStore['cost_rate_calculator_state_v1'] = JSON.stringify({
+    productName: 123,
+    sellingPrice: -100,
+    targetCostRate: 'bad',
+    materials: [
+        null,
+        { id: 'bad"id', name: 'x', usageAmount: 1, usageUnit: 'g', purchaseAmount: 1, purchaseUnit: 'g', purchasePrice: 10 },
+        { id: 'ok1', name: '正常材料', usageAmount: 10, usageUnit: 'g', purchaseAmount: 100, purchaseUnit: 'g', purchasePrice: 200 },
+        { id: 'badNum', name: '不正数値', usageAmount: -5, usageUnit: 'g', purchaseAmount: 1, purchaseUnit: 'g', purchasePrice: 10 }
+    ]
+});
+const sanitized = storage.loadState();
+assert(
+    sanitized !== null && sanitized.productName === '' && sanitized.sellingPrice === 0 && sanitized.targetCostRate === 0,
+    'ルートの不正フィールドは安全な既定値に正規化される'
+);
+assert(
+    sanitized.materials.length === 1 && sanitized.materials[0].id === 'ok1',
+    'materials の不正要素は破棄され有効な要素のみ残る'
+);
+
+mockStore['cost_rate_calculator_state_v1'] = '{broken json';
+assert(storage.loadState() === null, '破損JSONでも例外を送出せず null を返す');
+
+global.localStorage = {
+    getItem: () => null,
+    setItem: () => { throw new Error('QuotaExceededError'); },
+    removeItem: () => {}
+};
+assert(storage.saveState(emptyMaterialsState) === false, '保存失敗時に saveState() が false を返す');
 
 console.log(`\n========================================`);
 console.log(`テスト完了: PASS ${passed}件 / FAIL ${failed}件`);

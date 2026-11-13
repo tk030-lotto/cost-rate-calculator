@@ -223,6 +223,22 @@
   color: var(--text-secondary);
   font-weight: 600;
 }
+.gauge-status-badge.status-good {
+  background: var(--accent-emerald-bg);
+  color: var(--accent-emerald);
+}
+.gauge-status-badge.status-normal {
+  background: var(--accent-blue-bg);
+  color: var(--accent-blue);
+}
+.gauge-status-badge.status-warning {
+  background: var(--accent-amber-bg);
+  color: var(--accent-amber);
+}
+.gauge-status-badge.status-danger {
+  background: var(--accent-rose-bg);
+  color: var(--accent-rose);
+}
 
 .metrics-grid {
   display: grid;
@@ -319,4 +335,63 @@
 .btn-secondary:hover {
   color: var(--text-primary);
   border-color: var(--text-muted);
+}
+
+/* Confirm Dialog */
+.confirm-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1100;
+}
+.confirm-dialog-backdrop[hidden] {
+  display: none;
+}
+.confirm-dialog {
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+.confirm-dialog-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.confirm-dialog-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 18px;
+}
+.confirm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.confirm-dialog-actions .btn-secondary {
+  width: auto;
+  padding: 8px 16px;
+}
+.btn-danger {
+  padding: 8px 16px;
+  background: var(--accent-rose);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-family: inherit;
+}
+.btn-danger:hover {
+  opacity: 0.9;
 }
